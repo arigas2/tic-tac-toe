@@ -2,10 +2,37 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>My First Webpage</title>
-        <script src="tic-tac-toe.js"></script>
+        <title>Tic Tac Toe Game</title>
+        <script src="tic-tac-toe.js" defer></script>
+        <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <h1>Tic Tac Toe</h1>
+        <h1 class="center">Tic Tac Toe</h1>
+        <table id="board">
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+        <p class='center not-active'></p>
+        <div class='container'>
+            <button class='item' id="computerFirst">play computer that goes first</button>
+            <button class='item' id="computerSecond">play computer that goes second</button>
+            <button class='item' id='twoHumans'>play with two humans</button>
+        </div>
+        <div class='center'> <input class='not-active typedInput'></input> </div>
+        <div class='center'> <button class='not-active input' id='submit'>Submit</button> </div>
+        <div class='center'> <button class='not-active input' id='again'>Play Again</button> </div>
     </body>
 </html>
