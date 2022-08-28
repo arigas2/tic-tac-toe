@@ -9,27 +9,43 @@ const gameBoard = (() => {
         }
     }
 
-    const isThreeVertical = () => {
+    const isThreeVerticalX = () => {
         for (let i = 0; i < 3; i++) {
             if (('x' === boardArray[0][i]) && ('x' === boardArray[1][i]) && ('x' === boardArray[2][i])) return true;
+        }
+        return false;
+    }
+
+    const isThreeVerticalO = () => {
+        for (let i = 0; i < 3; i++) {
             if (('o' === boardArray[0][i]) && ('o' === boardArray[1][i]) && ('o' === boardArray[2][i])) return true;
         }
         return false;
     }
 
-    const isThreeHorizontal = () => {
+    const isThreeHorizontalX = () => {
         for (let i = 0; i < 3; i++) {
             if (('x' === boardArray[i][0]) && ('x' === boardArray[i][1]) && ('x' === boardArray[i][2])) return true;
+        }
+        return false;
+    }
+
+    const isThreeHorizontalO = () => {
+        for (let i = 0; i < 3; i++) {
             if (('o' === boardArray[i][0]) && ('o' === boardArray[i][1]) && ('o' === boardArray[i][2])) return true;
         }
         return false;
-  }
+    }
 
-    const isThreeDiagonal = () => {
+    const isThreeDiagonalX = () => {
         if (('x' === boardArray[0][0]) && ('x' === boardArray[1][1]) && ('x' === boardArray[2][2])) return true;
-        if (('o' === boardArray[0][0]) && ('o' === boardArray[1][1]) && ('o' === boardArray[2][2])) return true;
-
         if (('x' === boardArray[0][2]) && ('x' === boardArray[1][1]) && ('x' === boardArray[2][0])) return true;
+
+        return false;
+    }
+
+    const isThreeDiagonalO = () => {
+        if (('o' === boardArray[0][0]) && ('o' === boardArray[1][1]) && ('o' === boardArray[2][2])) return true;
         if (('o' === boardArray[0][2]) && ('o' === boardArray[1][1]) && ('o' === boardArray[2][0])) return true;
 
         return false;
@@ -42,7 +58,11 @@ const gameBoard = (() => {
         return true;
     }
 
-    const isGameOver = () => isThreeVertical() || isThreeHorizontal() || isThreeDiagonal() || isBoardFull();
+    const isGameOver = () => {
+        return isThreeVerticalX() || isThreeVerticalO() ||
+        isThreeHorizontalX() || isThreeHorizontalO() ||
+        isThreeDiagonalX() || isThreeDiagonalO() || isBoardFull();
+    }
 
     const displayBoard = () =>  {
         let board = document.querySelector('#board');
@@ -54,7 +74,18 @@ const gameBoard = (() => {
          }
     }
 
-    return { newBoard, isBoardFull, isGameOver, displayBoard, boardArray };
+    const getBoardArray = () => boardArray;
+
+    const setBoardArray = (row, column, char) => {
+        boardArray[row][column] = char;
+    }
+
+    return {
+        newBoard, isBoardFull, isGameOver,
+        displayBoard, getBoardArray, setBoardArray,
+        isThreeHorizontalX, isThreeHorizontalO, isThreeVerticalX,
+        isThreeVerticalO, isThreeDiagonalX, isThreeDiagonalO
+     };
   })();
 
   const playerFactory = (char) => {
@@ -77,14 +108,95 @@ const gameBoard = (() => {
     const {getName, getChar, setName} = playerFactory(char);
     setName('computer');
 
-    const makeMove = () => {
-        let row = Math.floor(Math.random() * 2);
-        let column = Math.floor(Math.random() * 2);
-        if (gameBoard.boardArray[row][column] != '') {
-            makeMove();
-        } else {
-            gameBoard.boardArray[row][column] = char;
+    const evaluate = () => {
+        if ((gameBoard.isThreeHorizontalX() || gameBoard.isThreeVerticalX() || gameBoard.isThreeDiagonalX())) {
+            if (char === 'x') {
+                return 10;
+            } else {
+                return -10;
+            }
         }
+
+        if ((gameBoard.isThreeHorizontalO() || gameBoard.isThreeVerticalO() || gameBoard.isThreeDiagonalO())) {
+            if (char === 'o') {
+                return 10;
+            } else {
+                return -10;
+            }
+        }
+
+        return 0;
+        
+    }
+
+    const minimax = (isMax, opponentChar) => {
+        let score = evaluate();
+
+        if (score == 10) return score;
+
+        if (score == -10) return score;
+
+        if (gameBoard.isGameOver()) return 0;
+
+        let best;
+
+        if (isMax) {
+            best = -100;
+
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+
+                    if (gameBoard.getBoardArray()[i][j]=='') {
+
+                        gameBoard.setBoardArray(i, j, char);
+                        best = Math.max(best, minimax(!isMax, opponentChar));
+                        gameBoard.setBoardArray(i, j, '');
+                    }
+                }
+            }
+        } else {
+            best = 100;
+
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+
+                    if (gameBoard.getBoardArray()[i][j]=='') {
+
+                        gameBoard.setBoardArray(i, j, opponentChar);
+                        best = Math.min(best, minimax(!isMax, char));
+                        gameBoard.setBoardArray(i, j, '');
+                    }
+                }
+            }
+        }
+        return best;
+    }
+
+    // adapted from geeksforgeeks: https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-3-tic-tac-toe-ai-finding-optimal-move/
+    const makeMove = (opponentChar) => {
+
+        let bestVal = -1000;
+        let bestRow = -1;
+        let bestCol = -1;
+    
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                
+                if (gameBoard.getBoardArray()[i][j] == '') {
+                    
+                    gameBoard.setBoardArray(i, j, char);
+                    let moveVal = minimax(false, opponentChar);
+                    gameBoard.setBoardArray(i, j, '');
+    
+                    if (moveVal > bestVal) {
+                        bestRow = i;
+                        bestCol = j;
+                        bestVal = moveVal;
+                    }
+                }
+            }
+        }
+        gameBoard.setBoardArray(bestRow, bestCol, char);
     }
 
     return { getName, getChar, makeMove};
@@ -126,25 +238,31 @@ const gameBoard = (() => {
     const handleMove = e => {
         e.target.removeEventListener('click', handleMove);
         if (xTurn === true) {
-            gameBoard.boardArray[e.target.parentNode.rowIndex][e.target.cellIndex] = x.getChar();
+            gameBoard.setBoardArray(e.target.parentNode.rowIndex, e.target.cellIndex, x.getChar())
         } else {
-            gameBoard.boardArray[e.target.parentNode.rowIndex][e.target.cellIndex] = o.getChar();
+            gameBoard.setBoardArray(e.target.parentNode.rowIndex, e.target.cellIndex, o.getChar())
         }
 
         if (gameBoard.isGameOver()){
-            handleEndGame();
+            gameBoard.displayBoard();
+            handleEndGame(false);
         } else {
             if (computer) {
                 if (xTurn) {
-                    o.makeMove();
+                    o.makeMove(x.getChar());
                 } else {
-                    x.makeMove();
+                    x.makeMove(o.getChar());
+                }
+                gameBoard.displayBoard();
+                if (gameBoard.isGameOver()){
+                    handleEndGame(true);
+                } else {
+                    gameStatus.textContent = displayTurn();
                 }
             } else {
                 xTurn = !xTurn;
+                gameStatus.textContent = displayTurn();
             }
-            gameBoard.displayBoard();
-            gameStatus.textContent = displayTurn();
         }
     }
 
@@ -281,16 +399,19 @@ const gameBoard = (() => {
         playGame();
     }
 
-    const handleEndGame = () => {
-        // gameBoard.displayBoard();
+    const handleEndGame = (computer) => {
         againBtn.classList.toggle('not-active');
         againBtn.addEventListener('click', playAgain);
 
-        if (xTurn && !gameBoard.isBoardFull()) {
-            gameStatus.textContent = x.getName() + ' wins!'
-        } else if (!xTurn && !gameBoard.isBoardFull()) {
-            gameStatus.textContent = o.getName() + ' wins!'
-        } else { gameStatus.textContent = "it's a draw :("};
+        if (computer) {
+            gameStatus.textContent = 'computer wins :('
+        } else {
+            if (xTurn && !gameBoard.isBoardFull()) {
+                gameStatus.textContent = x.getName() + ' wins!'
+            } else if (!xTurn && !gameBoard.isBoardFull()) {
+                gameStatus.textContent = o.getName() + ' wins!'
+            } else { gameStatus.textContent = "it's a draw :("};
+        }
 
         cells.forEach((cell) => {
             cell.removeEventListener('click', handleMove);
