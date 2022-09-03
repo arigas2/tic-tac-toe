@@ -136,7 +136,7 @@ const gameBoard = (() => {
 
         if (score == -10) return score;
 
-        if (gameBoard.isGameOver()) return 0;
+        if (gameBoard.isGameOver()) return score;
 
         let best;
 
@@ -163,7 +163,7 @@ const gameBoard = (() => {
                     if (gameBoard.getBoardArray()[i][j]=='') {
 
                         gameBoard.setBoardArray(i, j, opponentChar);
-                        best = Math.min(best, minimax(!isMax, char));
+                        best = Math.min(best, minimax(!isMax, opponentChar));
                         gameBoard.setBoardArray(i, j, '');
                     }
                 }
@@ -187,7 +187,6 @@ const gameBoard = (() => {
                     gameBoard.setBoardArray(i, j, char);
                     let moveVal = minimax(false, opponentChar);
                     gameBoard.setBoardArray(i, j, '');
-    
                     if (moveVal > bestVal) {
                         bestRow = i;
                         bestCol = j;
@@ -404,13 +403,17 @@ const gameBoard = (() => {
         againBtn.addEventListener('click', playAgain);
 
         if (computer) {
-            gameStatus.textContent = 'computer wins :('
+            if (gameBoard.isBoardFull()) {
+                gameStatus.textContent = "It's a draw.";
+            } else {
+                gameStatus.textContent = 'Computer wins :('
+            }
         } else {
             if (xTurn && !gameBoard.isBoardFull()) {
                 gameStatus.textContent = x.getName() + ' wins!'
             } else if (!xTurn && !gameBoard.isBoardFull()) {
                 gameStatus.textContent = o.getName() + ' wins!'
-            } else { gameStatus.textContent = "it's a draw :("};
+            } else { gameStatus.textContent = "It's a draw."};
         }
 
         cells.forEach((cell) => {
